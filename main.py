@@ -1,4 +1,5 @@
 import serial
+from l1a import *
 
 s = serial.Serial('COM4', 115200)
 rawdata = []
@@ -33,8 +34,6 @@ for l1a in rawdata:
 
 
 # a list to be filled with L1As in order received
-# each L1A is a list with 48 entries, one for each DTMROC, in order
-# each DTMROC is a binary string, containing the data, in order
 fmtdata = []
 for l1a in rawdata:
     # a string containing only binary digits, all the data from the FPGA concated together
@@ -49,16 +48,19 @@ for l1a in rawdata:
         print("l1a improperly formatted, moving on")
         continue
 
-    fmtdata.append(([], l1a[-1][0][:-16]))
+    fmtdata.append([])
     for i in range(48):
-        fmtdata[-1][0].append("".join([ds[(47-i)+48*j] for j in range(int(len(ds)/48))]))
+        dtmrocs = "".join([ds[(47-i)+48*j] for j in range(int(len(ds)/48))])
+        asdblrs = []
+        for dtmroc in dtmrocs:
+            asdblrs.append()#some stuff
+        fmtdata[-1].append(L1a(dtmrocs, asdblrs, int(l1a[-1][0][:-16])))
 
-# check to make sure each is of the correct length, toss it if else.  shouldn't be needed, just in case
+# check to make sure each is of the correct length, toss it if else
 for l1a in fmtdata:
-    for roc in l1a[0]:
-        if len(l1a[0]) != 48 or len(roc) != 441:
-            print("Data parsed incorrectly, tossing out")
-            fmtdata.remove(l1a)
+    if len(l1a.dtmrocs) != 48 or len(l1a.dtmrocs[0]) != 441:
+        print("Data parsed incorrectly, tossing out")
+        fmtdata.remove(l1a)
 
 print(fmtdata[0][0][0])
 print(fmtdata[0][0][47])
