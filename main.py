@@ -4,14 +4,15 @@ from l1a import L1a
 s = serial.Serial('COM4', 115200)
 
 rawdata = []
-linen = 0
-while linen < 4000:
+while 1:
     line = str(s.readline())[2:-5]
     if len(line) == 0:
         print("ignoring, partial line? " + line)
         continue
 
-    if line == "Divider":
+    if line == "End":
+        break
+    elif line == "Divider":
         rawdata.append([])
     elif line[0] is "[" and line[-1] is "]":
         try:
@@ -24,7 +25,6 @@ while linen < 4000:
             print("ignoring, badly formatted value? " + line)
     else:
         print("ignoring, unrecognized line " + line)
-    linen += 1
 s.close()
 print("data reception completed, serial port closed")
 
@@ -76,11 +76,10 @@ for l1a in fmtdata:
                 print("Data parsed incorrectly, wrong length of asd strings received, tossing out")
                 badl1as.append(l1a)
                 continue
-# continue doesn't break out of all the loops, so this prevents removing the same l1a twice
 for badl1a in set(badl1as):
     fmtdata.remove(badl1a)
 
-print("{} l1as properly received, will save".format(len(fmtdata)))
+print("{} l1as of proper length received, will save".format(len(fmtdata)))
 
 savedata = "["
 for l1a in fmtdata:
