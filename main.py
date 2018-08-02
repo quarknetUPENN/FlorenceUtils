@@ -1,6 +1,5 @@
 import serial
 from l1a import L1a
-
 s = serial.Serial('COM4', 115200)
 
 rawdata = []
@@ -88,7 +87,6 @@ for l1a in fmtdata:
 savedata = savedata[:-1]
 savedata += "]"
 
-with open("save.fdf", "w") as savefile:
+with open("save8.fdf", "w") as savefile:
     savefile.write(savedata)
-
 

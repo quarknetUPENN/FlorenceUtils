@@ -1,4 +1,5 @@
 from l1a import L1a
+from regwriter import fmt
 
 errortracker = [0, 0]
 
@@ -16,17 +17,39 @@ def listchecker(checklist, value, name):
     errortracker[1] += errors
 
 
-with open("save.fdf", "r") as fdf:
+with open("save8.fdf", "r") as fdf:
     exec("data = " + fdf.readline())
 # noinspection PyUnresolvedReferences
 data = data
 
 for l1a in data:
-    print("l1a eventid", l1a.eventid)
-    print(l1a.dtmrocs[0])
-    print(l1a.dtmrocs[47])
+    print("l1a event id", l1a.eventid)
+    print(l1a.asdblrs[0])
+    print(l1a.asdblrs[47])
 
-    listchecker(l1a.asdblrs[0], "000010100000101000001010", "asdblrs0")
-    listchecker(l1a.asdblrs[47], "000010110000101100001011", "asdblrs47")
+channeldata = ["" for i in range(32)]
+for l1an in range(0, len(data), 11):
+    for l1ann in range(l1an, l1an + 11):
+        for channeln in range(len(channeldata)):
+            channeldata[channeln] += (data[l1an].asdblrs[0] + data[l1an].asdblrs[47])[channeln]
 
-print("Checked {} bits, found {} errors".format(errortracker[0], errortracker[1]))
+for channel in channeldata:
+    bitn = 0
+    for char in channel:
+        if bitn % (24 * 11) == 0:
+            print(fmt.RED + "|X|" + fmt.END, end="")
+        elif bitn % 24 == 0:
+            print("|", end="")
+
+        bitn += 1
+        if char == "1":
+            print(fmt.GREEN + char + fmt.END, end="")
+        elif char == "0":
+            print(fmt.BLUE + char + fmt.END, end="")
+
+    print("")
+
+#     listchecker(l1a.asdblrs[0], "000010100000101000001010", "asdblrs0")
+#     listchecker(l1a.asdblrs[47], "000010110000101100001011", "asdblrs47")
+#
+# print("Checked {} bits, found {} errors".format(errortracker[0], errortracker[1]))
