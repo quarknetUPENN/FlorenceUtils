@@ -1,5 +1,4 @@
-from l1a import L1a
-from regwriter import fmt
+from datareception import L1a, fmt
 
 errortracker = [0, 0]
 
@@ -17,15 +16,10 @@ def listchecker(checklist, value, name):
     errortracker[1] += errors
 
 
-with open("save8.fdf", "r") as fdf:
+with open("dtm0ls.fdf", "r") as fdf:
     exec("data = " + fdf.readline())
 # noinspection PyUnresolvedReferences
 data = data
-
-for l1a in data:
-    print("l1a event id", l1a.eventid)
-    print(l1a.asdblrs[0])
-    print(l1a.asdblrs[47])
 
 channeldata = ["" for i in range(32)]
 for l1an in range(0, len(data), 11):
