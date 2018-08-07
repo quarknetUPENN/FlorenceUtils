@@ -16,10 +16,24 @@ def listchecker(checklist, value, name):
     errortracker[1] += errors
 
 
-with open("dtm0ls.fdf", "r") as fdf:
+with open("dtm0v2.fdf", "r") as fdf:
     exec("data = " + fdf.readline())
 # noinspection PyUnresolvedReferences
 data = data
+
+n = 0
+for l1a in data:
+    if n % 11 == 0:
+        print(fmt.DARKCYAN+str(n)+fmt.END,end="  ")
+    else:
+        print(n, end="  ")
+    for j in range(len(l1a.dtmrocs[47])):
+        if j % 9 == 0:
+            print("|",end="")
+        print(l1a.dtmrocs[47][j],end="")
+    print()
+    n+=1
+
 
 channeldata = ["" for i in range(32)]
 for l1an in range(0, len(data), 11):
