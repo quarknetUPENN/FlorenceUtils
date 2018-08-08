@@ -14,9 +14,7 @@ class L1a:
     def formatSave(self):
         return "L1a(" + str(self.dtmrocs) + ", " + \
                str(self.asdblrs) + ", " + \
-               str(self.eventid) + ", " + \
-               str(self.rawl1a) + ", \'" + \
-               str(self.rawds) + "\')"
+               str(self.eventid) + ")"
 
 
 class fmt:
@@ -128,12 +126,12 @@ class ZynqTCPHandler(StreamRequestHandler):
         savedata = savedata[:-1]
         savedata += "]"
 
-        self._savefile(savedata, log)
+        self._savefile(fmtdata, log)
 
         log.close()
 
     # recursively saves file by asking user for a valid filename
-    def _savefile(self, savedata, log):
+    def _savefile(self, fmtdata, log):
         filename = input("Input filename to save data as. Leave blank to not save\t\t")
         if filename == "":
             log.write("user chose not to save data \n")
@@ -141,14 +139,16 @@ class ZynqTCPHandler(StreamRequestHandler):
             return
         elif exists(filename + ".fdf"):
             if input("Warning!  File already exists.  Overwrite? (y/n)\t") != "y":
-                self._savefile(savedata, log)
+                self._savefile(fmtdata, log)
                 return
 
         with open(filename + ".fdf", "w") as savefile:
-            savefile.write(savedata)
-            savefile.write("\n")
             with open("l1arecvkwargs.temp") as kwargsfile:
                 savefile.write(kwargsfile.readline())
+            savefile.write("\n")
+            for l1a in fmtdata:
+                savefile.write(l1a.formatSave())
+                savefile.write("\n")
             remove("l1arecvkwargs.temp")
         log.write("Saved data to file " + filename + ".fdf\n")
         print("Saved file as " + filename + ".fdf \n")

@@ -3,8 +3,10 @@ import matplotlib.pyplot as plt
 
 def printfdf(fname):
     with open(fname, "r") as fdf:
-        data = eval(fdf.readline())
         kwargs = eval(fdf.readline())
+        data = []
+        for line in fdf.readlines():
+            data.append(eval(line))
     threshspace = kwargs["l1as_to_send"]
 
     channeldata = ["" for i in range(32)]
@@ -29,13 +31,16 @@ def printfdf(fname):
             elif char == "0":
                 print(fmt.BLUE + char + fmt.END, end="")
         print("")
+    fdf.close()
 
 
 
 def graphfdf(fname):
     with open(fname, "r") as fdf:
-        data = eval(fdf.readline())
         kwargs = eval(fdf.readline())
+        data = []
+        for line in fdf.readlines():
+            data.append(eval(line))
     threshspace = kwargs["l1as_to_send"]
 
     channeldata = ["" for i in range(32)]
