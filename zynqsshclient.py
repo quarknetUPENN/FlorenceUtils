@@ -1,4 +1,6 @@
 from paramiko import SSHClient, WarningPolicy
+from os import system, remove
+from queue import Queue
 
 Config = "Config"
 Status = "Status"
@@ -17,10 +19,16 @@ Wr = "WR"
 # This class allows us to access a shell running on the Zynq from a Python script running on Ubuntu
 # provides easy functions to call our C++ routines and other things
 class ZynqSshClient(SSHClient):
+    kwargsq = Queue()
+
     def __init__(self):
         super().__init__()
         self.set_missing_host_key_policy(WarningPolicy())
-        self.connect("169.254.27.144", port=22, username="root", password="root")
+        self.username = "root"
+        self.password = "root"
+        self.ip = "169.254.27.144"
+        self.port = 22
+        self.connect(self.ip, port=self.port, username=self.username, password=self.password)
 
     def runcmd(self, cmd):
         ssh_stdin, ssh_stdout, ssh_stderr = self.exec_command(cmd)
@@ -71,14 +79,18 @@ class ZynqSshClient(SSHClient):
         if max(lowthreshs) > 255 or max(highthreshs) > 255:
             return -4
 
-        # saves the arguments we called this with to a temp file, to be read when we receive the data and put in the fdf
-        with open("l1arecvkwargs.temp", "w") as kwargssave:
-            kwargssave.write(str({"l1as_to_send": l1as_to_send, "lowthreshs": lowthreshs, "highthreshs": highthreshs}))
+        self.kwargsq.put({"l1as_to_send": l1as_to_send, "lowthreshs": lowthreshs, "highthreshs": highthreshs})
 
         threshs = [(lowthreshs[n] << 8) | highthreshs[n] for n in range(len(lowthreshs))]
 
-        result = self.runcmd(
-            "/run/media/mmcblk0p1/save/l1arecv.out " + str(l1as_to_send) + "".join([" " + str(n) for n in threshs]))
+        with open("threshs", "w") as threshsfile:
+            for thresh in threshs:
+                threshsfile.write(str(thresh))
+                threshsfile.write("\n")
+        system('sshpass  -p "{}" scp threshs {}@{}:/run/media/mmcblk0p1/save/'.format(self.password, self.username, self.ip))
+        remove("threshs")
+
+        result = self.runcmd("cd /run/media/mmcblk0p1/save; ./l1arecv.out " + str(l1as_to_send) + " threshs")
 
         if len(list(result[2])) != 0:
             return -1

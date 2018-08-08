@@ -1,10 +1,9 @@
 from socketserver import StreamRequestHandler
 from os.path import exists
-from os import remove
-
+from zynqsshclient import ZynqSshClient
 
 class L1a:
-    def __init__(self, dtmrocs, asdblrs, eventid, rawl1a, rawds):
+    def __init__(self, dtmrocs, asdblrs, eventid, rawl1a=None, rawds=None):
         self.dtmrocs = dtmrocs
         self.asdblrs = asdblrs
         self.eventid = eventid
@@ -135,17 +134,23 @@ class ZynqTCPHandler(StreamRequestHandler):
             print("Data not saved")
             return
         elif exists(filename + ".fdf"):
-            if input("Warning!  File already exists.  Overwrite? (y/n)\t") != "y":
-                self._savefile(fmtdata, log)
-                return
+            while True:
+                overwriteprompt = input("Warning!  File already exists.  Overwrite? (y/n)\t")
+                if overwriteprompt == "y":
+                    break
+                elif overwriteprompt == "n":
+                    self._savefile(fmtdata, log)
+                    return
+
+        kwargsdict = ZynqSshClient.kwargsq.get()
+        notes = input("Any notes to add? \n")
+        kwargsdict["notes"] = notes
 
         with open(filename + ".fdf", "w") as savefile:
-            with open("l1arecvkwargs.temp") as kwargsfile:
-                savefile.write(kwargsfile.readline())
+            savefile.write(str(kwargsdict))
             savefile.write("\n")
             for l1a in fmtdata:
                 savefile.write(l1a.formatSave())
                 savefile.write("\n")
-            remove("l1arecvkwargs.temp")
         log.write("Saved data to file " + filename + ".fdf\n")
         print("Saved file as " + filename + ".fdf \n")
