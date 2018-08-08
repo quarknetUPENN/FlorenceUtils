@@ -1,4 +1,6 @@
 from socketserver import StreamRequestHandler
+from os.path import exists
+from os import remove
 
 
 class L1a:
@@ -82,7 +84,7 @@ class ZynqTCPHandler(StreamRequestHandler):
                         continue
         for badl1a in set(badl1as):
             fmtdata.remove(badl1a)
-        return fmtdata
+        return (fmtdata, len(set(badl1as)))
 
     def handle(self):
         log = open(self.LogFileName, "a")
@@ -114,10 +116,10 @@ class ZynqTCPHandler(StreamRequestHandler):
             else:
                 log.write("ignoring, unrecognized line " + line+"\n")
         log.write("finished receiving data \n")
-        fmtdata = self._datafmter(rawdata, log)
+        fmtdata, badl1an = self._datafmter(rawdata, log)
 
-        log.write("{} proper l1as received \n".format(len(fmtdata)))
-        print("{} proper l1as received, will save".format(len(fmtdata)))
+        log.write("{} proper l1as received, {} bad ones \n".format(len(fmtdata), badl1an))
+        print("{} proper l1as received, {} bad l1as, will save".format(len(fmtdata), badl1an))
 
         savedata = "["
         for l1a in fmtdata:
@@ -126,14 +128,27 @@ class ZynqTCPHandler(StreamRequestHandler):
         savedata = savedata[:-1]
         savedata += "]"
 
-        filename = input("Input filename to save data as. Leave blank to not save. WARN: Will be overwritten \t")
+        self._savefile(savedata, log)
+
+        log.close()
+
+    # recursively saves file by asking user for a valid filename
+    def _savefile(self, savedata, log):
+        filename = input("Input filename to save data as. Leave blank to not save\t\t")
         if filename == "":
             log.write("user chose not to save data \n")
             print("Data not saved")
             return
+        elif exists(filename + ".fdf"):
+            if input("Warning!  File already exists.  Overwrite? (y/n)\t") != "y":
+                self._savefile(savedata, log)
+                return
+
         with open(filename + ".fdf", "w") as savefile:
             savefile.write(savedata)
+            savefile.write("\n")
+            with open("l1arecvkwargs.temp") as kwargsfile:
+                savefile.write(kwargsfile.readline())
+            remove("l1arecvkwargs.temp")
         log.write("Saved data to file " + filename + ".fdf\n")
         print("Saved file as " + filename + ".fdf \n")
-
-        log.close()
