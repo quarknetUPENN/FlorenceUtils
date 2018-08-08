@@ -30,11 +30,54 @@ class fmt:
     END = '\033[0m'
 
 
+# this class allows us to receive data from the Zynq using a socket connection over ethernet
+# theoritically this can be two way.  However, we simply listen for data coming for the Zynq
+# and process it into L1a objects, catching any unexpected data that comes in and logging such events
+# into a logfile without clogging up stdout
 class ZynqTCPHandler(StreamRequestHandler):
     LogFileName = "ZynqTCPHandler.log"
 
     def __init__(self, request, client_address, server):
         super(ZynqTCPHandler, self).__init__(request, client_address, server)
+
+    # this function gets called when a socket connection is made
+    def handle(self):
+        log = open(self.LogFileName, "a")
+
+        log.write("\nstarting run...")
+        print("Run started, receiving data...", end="")
+
+        rawdata = []
+        while 1:
+            line = self.rfile.readline().strip().decode("utf-8")
+
+            if len(line) == 0:
+                log.write("ignoring, partial line? " + line + "\n")
+                break
+
+            if line == "End":
+                break
+            elif line == "Divider":
+                rawdata.append([])
+            elif line[0] is "[" and line[-1] is "]":
+                try:
+                    exec("self.temp = " + line)
+                    # noinspection PyUnresolvedReferences
+                    rawdata[-1].append(self.temp)
+                except IndexError:
+                    log.write("ignoring, middle of event? " + line + "\n")
+                except SyntaxError:
+                    log.write("ignoring, badly formatted value? " + line + "\n")
+            else:
+                log.write("ignoring, unrecognized line " + line + "\n")
+        log.write("finished receiving data \n")
+        fmtdata, badl1an = self._datafmter(rawdata, log)
+
+        log.write("{} proper l1as received, {} bad ones \n".format(len(fmtdata), badl1an))
+        print("{} proper l1as received, {} bad l1as, will save".format(len(fmtdata), badl1an))
+
+        self._savefile(fmtdata, log)
+        log.close()
 
     @staticmethod
     def _datafmter(rawdata, logfile):
@@ -82,53 +125,7 @@ class ZynqTCPHandler(StreamRequestHandler):
                         continue
         for badl1a in set(badl1as):
             fmtdata.remove(badl1a)
-        return (fmtdata, len(set(badl1as)))
-
-    def handle(self):
-        log = open(self.LogFileName, "a")
-
-        log.write("\nstarting run...")
-        print("Run started, receiving data...", end="")
-
-        rawdata = []
-        while 1:
-            line = self.rfile.readline().strip().decode("utf-8")
-
-            if len(line) == 0:
-                log.write("ignoring, partial line? " + line+"\n")
-                break
-
-            if line == "End":
-                break
-            elif line == "Divider":
-                rawdata.append([])
-            elif line[0] is "[" and line[-1] is "]":
-                try:
-                    exec("self.temp = " + line)
-                    # noinspection PyUnresolvedReferences
-                    rawdata[-1].append(self.temp)
-                except IndexError:
-                    log.write("ignoring, middle of event? " + line+"\n")
-                except SyntaxError:
-                    log.write("ignoring, badly formatted value? " + line+"\n")
-            else:
-                log.write("ignoring, unrecognized line " + line+"\n")
-        log.write("finished receiving data \n")
-        fmtdata, badl1an = self._datafmter(rawdata, log)
-
-        log.write("{} proper l1as received, {} bad ones \n".format(len(fmtdata), badl1an))
-        print("{} proper l1as received, {} bad l1as, will save".format(len(fmtdata), badl1an))
-
-        savedata = "["
-        for l1a in fmtdata:
-            savedata += l1a.formatSave()
-            savedata += ","
-        savedata = savedata[:-1]
-        savedata += "]"
-
-        self._savefile(fmtdata, log)
-
-        log.close()
+        return fmtdata, len(set(badl1as))
 
     # recursively saves file by asking user for a valid filename
     def _savefile(self, fmtdata, log):

@@ -1,6 +1,7 @@
 from datareception import *
 import matplotlib.pyplot as plt
 
+
 def printfdf(fname):
     with open(fname, "r") as fdf:
         kwargs = eval(fdf.readline())
@@ -34,7 +35,6 @@ def printfdf(fname):
     fdf.close()
 
 
-
 def graphfdf(fname):
     with open(fname, "r") as fdf:
         kwargs = eval(fdf.readline())
@@ -52,7 +52,7 @@ def graphfdf(fname):
     plotdata = []
     n = 0
     for channel in channeldata:
-        threshavgs = [channel[n:n+(24*threshspace)] for n in range(0, len(channel), 24*threshspace)]
+        threshavgs = [channel[n:n + (24 * threshspace)] for n in range(0, len(channel), 24 * threshspace)]
         threshavgs = [threshavg.count("1") / len(threshavg) for threshavg in threshavgs]
         if n % 16 <= 11:
             plotdata.append(threshavgs)
@@ -66,22 +66,23 @@ def graphfdf(fname):
     plt.show()
 
 
-def showLastFdf(usePrint=True, useGraph=True):
+def showLastFdf(useprint=True, usegraph=True):
     # print the last fdf saved
     with open(ZynqTCPHandler.LogFileName, "r") as log:
         try:
             lastsavedfdf = log.readlines()[-1][19:-1]
         except IndexError:
             print("Last fdf was not saved, cannot print file")
-            exit()
+            return
 
     if lastsavedfdf[-4:] == ".fdf":
-        if usePrint:
+        if useprint:
             printfdf(lastsavedfdf)
-        if useGraph:
+        if usegraph:
             graphfdf(lastsavedfdf)
     else:
-        print("Last fdf was not saved, cannot print file \""+lastsavedfdf+"\"")
+        print("Last fdf was not saved, cannot print file \"" + lastsavedfdf + "\"")
+
 
 if __name__ == "__main__":
-    showLastFdf(usePrint=False)
+    showLastFdf(useprint=False)

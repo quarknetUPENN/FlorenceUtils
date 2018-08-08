@@ -1,14 +1,14 @@
 from datareception import *
 from zynqsshclient import *
-import socketserver
+from socketserver import TCPServer
 from threading import Thread
 from readfdf import showLastFdf
 
-server = socketserver.TCPServer(('', 8080), ZynqTCPHandler)
+server = TCPServer(('', 8080), ZynqTCPHandler)
 
 ssh = ZynqSshClient()
 
-print(ssh.cccd(Reg, Wr, Config, 0b111111, 1))
+ssh.cccd(Reg, Wr, Config, 0b111111, 1)
 
 
 def getl1as():
@@ -29,4 +29,4 @@ ssh.close()
 server.server_close()
 
 
-showLastFdf(usePrint=False)
+showLastFdf(useprint=False)

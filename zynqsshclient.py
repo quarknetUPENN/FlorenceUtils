@@ -14,6 +14,8 @@ Rd = "RD"
 Wr = "WR"
 
 
+# This class allows us to access a shell running on the Zynq from a Python script running on Ubuntu
+# provides easy functions to call our C++ routines and other things
 class ZynqSshClient(SSHClient):
     def __init__(self):
         super().__init__()
@@ -27,7 +29,7 @@ class ZynqSshClient(SSHClient):
             print(ssh_stderr.readlines())
         return ssh_stdin, ssh_stdout, ssh_stderr
 
-    def cccd(self, cmd, rw=None, reg=None, chipid=None, payload=None):
+    def cccd(self, cmd, rw=None, reg=None, chipid=None, payload=None, printresult=True):
         if cmd is not None and rw is None and reg is None and chipid is None and payload is None:
             result = self.runcmd("/run/media/mmcblk0p1/save/cccd.out {}".format(cmd))
         elif cmd is not None and rw is not None and reg is not None and chipid is not None and payload is None:
@@ -39,15 +41,23 @@ class ZynqSshClient(SSHClient):
             print("Invalid number of arguments given to cccd!  Ignoring")
             return -2
 
+        if printresult:
+            print("cccd invocation {} {} {} {} {} ".format(cmd, rw, reg, bin(chipid), payload), end="")
         output = result[1].readlines()
         if output[-1].strip() != "Exiting cleanly.":
+            if printresult:
+                print("failed")
             return -1
+
+        if printresult:
+            print("successful")
+
         if rw == Rd:
             return output[1].strip()
         else:
             return 0
 
-    def l1arecv(self, l1as_to_send = 11, lowthreshs = None, highthreshs = None):
+    def l1arecv(self, l1as_to_send=11, lowthreshs=None, highthreshs=None):
         if lowthreshs is None and highthreshs is None:
             lowthreshs = [0 for n in range(l1as_to_send)]
             highthreshs = [255 for n in range(l1as_to_send)]
@@ -61,6 +71,7 @@ class ZynqSshClient(SSHClient):
         if max(lowthreshs) > 255 or max(highthreshs) > 255:
             return -4
 
+        # saves the arguments we called this with to a temp file, to be read when we receive the data and put in the fdf
         with open("l1arecvkwargs.temp", "w") as kwargssave:
             kwargssave.write(str({"l1as_to_send": l1as_to_send, "lowthreshs": lowthreshs, "highthreshs": highthreshs}))
 
@@ -84,4 +95,3 @@ class ZynqSshClient(SSHClient):
             return 0
         else:
             return 2
-
