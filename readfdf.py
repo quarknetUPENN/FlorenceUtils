@@ -6,6 +6,7 @@ markers = ["s", "o", "<", "D", "h", "X"]
 colors = [plt.cm.get_cmap("brg")(n/12) for n in range(12)]
 colors = [[color[0], color[1], color[2], 1] for color in colors]
 
+
 def printfdf(fname):
     with open(fname, "r") as fdf:
         kwargs = eval(fdf.readline())

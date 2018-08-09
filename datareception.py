@@ -82,6 +82,13 @@ class ZynqTCPHandler(StreamRequestHandler):
                     log.write("ignoring, middle of event? " + line + "\n")
                 except SyntaxError:
                     log.write("ignoring, badly formatted value? " + line + "\n")
+            elif line[:11] == "dips error ":
+                log.write(line+"\n")
+                dipscode = int(line[-1])
+                if dipscode % 2 == 1:
+                    print("dips overflowed!!!")
+                elif dipscode % 2 == 0:
+                    print("dips empty!")
             else:
                 log.write("ignoring, unrecognized line " + line + "\n")
         log.write("finished receiving data \n")

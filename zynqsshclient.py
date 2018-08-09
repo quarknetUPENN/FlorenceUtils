@@ -113,11 +113,17 @@ class ZynqSshClient(SSHClient):
             return -2
 
     # Programs the FPGA with the bitstream on the SD card
-    def buildpl(self):
+    def buildpl(self, printresult=True):
         result = self.runcmd("cd {}pl; ./fpgaconfig.sh".format(self.persistpath))
         if len(list(result[2])) != 0:
+            if printresult:
+                print("Error occurred programming FPGA!")
+                print(result[2].readlines())
             return 1
         elif "Successfully programmed fpga" in result[1].readlines()[-1]:
+            print("FPGA successfully programmed")
             return 0
         else:
+            if printresult:
+                print("Unknown error occurred programming FPGA!")
             return 2
