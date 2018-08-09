@@ -1,6 +1,7 @@
 from datareception import fmt
 
 
+# this prints out a 32 bit register in terminal, but with each bit labeled
 def printreg(reg, name=None):
     if name is not None:
         print(fmt.BOLD + name + ": " + fmt.END)

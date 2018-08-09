@@ -2,20 +2,35 @@ from socketserver import StreamRequestHandler
 from os.path import exists
 from zynqsshclient import ZynqSshClient
 
+
 class L1a:
     def __init__(self, dtmrocs, asdblrs, eventid, rawl1a=None, rawds=None):
+        # This is a 48 element list, one for each DTMROC, containing the 441 bits that DTMROC-n sent for this l1a as a
+        # string.  So dtmrocs[n] gives the bits that DTMROC #n sent, for integer n on [0,47]
         self.dtmrocs = dtmrocs
+
+        # This is a list of lists, which is 48 x 16, allowing you to see all of the low threshold bits that specific
+        # asdblr channel sent for this l1a - so each binary string here is 24 long
+        # So asdblrs[n][m] gives the bits from channel m on DTMROC #n, for integer n, m on [0,47] and [0,15] respectively
+        # Note that on our boards channel #15 is tied low, #14 tied high, #13 tied low, and #12 tied high
         self.asdblrs = asdblrs
+
+        # This is the 16-bit event ID as an integer, for this L1A, allowing L1As to be associated together as events
+        # Each DTMROC's BxCntr and L1aCntr can also help verify this
         self.eventid = eventid
+
+        # these are optional pieces of raw data that get formatted into the above
         self.rawl1a = rawl1a
         self.rawds = rawds
 
+    # This formats the processed data into a string, which when eval()'d, becomes this L1a object again
     def formatSave(self):
         return "L1a(" + str(self.dtmrocs) + ", " + \
                str(self.asdblrs) + ", " + \
                str(self.eventid) + ")"
 
 
+# helps makes printing in the terminal pretty
 class fmt:
     PURPLE = '\033[95m'
     CYAN = '\033[96m'
@@ -73,7 +88,7 @@ class ZynqTCPHandler(StreamRequestHandler):
         fmtdata, badl1an = self._datafmter(rawdata, log)
 
         log.write("{} proper l1as received, {} bad ones \n".format(len(fmtdata), badl1an))
-        print("{} proper l1as received, {} bad l1as, will save".format(len(fmtdata), badl1an))
+        print("{} proper l1as received, {} bad l1as".format(len(fmtdata), badl1an))
 
         self._savefile(fmtdata, log)
         log.close()
@@ -91,11 +106,11 @@ class ZynqTCPHandler(StreamRequestHandler):
             # thus, [ROC47bit0 -> ROC0bit0, ROC47bit1 -> ROC0bit1....]
             ds = ''
             for reg in rawl1a:
-                # format specifier to convert the number into binary, as a string
+                # format specifier to convert the number into binary, properly padded
                 reg[0] = '{0:032b}'.format(reg[0])
                 ds += reg[0]
 
-            # create the l1a objects and add them to the list
+            # create the l1a objects and add them to the list by parsing the data in
             buildl1a = L1a([], [], int(rawl1a[-1][0][-16:], 2), rawl1a, ds)
             for i in range(48):
                 dtmroc = "".join([ds[(47 - i) + 48 * j] for j in range(int(len(ds) / 48))])
@@ -126,7 +141,7 @@ class ZynqTCPHandler(StreamRequestHandler):
             fmtdata.remove(badl1a)
         return fmtdata, len(set(badl1as))
 
-    # recursively saves file by asking user for a valid filename
+    # saves fmtdata by asking user for a valid filename recursively
     def _savefile(self, fmtdata, log):
         filename = input("Input filename to save data as. Leave blank to not save\t\t")
         if filename == "":
@@ -143,7 +158,7 @@ class ZynqTCPHandler(StreamRequestHandler):
                     return
 
         kwargsdict = ZynqSshClient.kwargsq.get()
-        notes = input("Any notes to add? \n")
+        notes = input("Any notes to add? (press Enter if not)\n")
         kwargsdict["notes"] = notes
 
         with open(filename + ".fdf", "w") as savefile:

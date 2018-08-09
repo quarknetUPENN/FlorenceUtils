@@ -97,9 +97,9 @@ def graphfdf(fname):
                         yerr=[bgchannels[3] - bgchannels[2], bgchannels[4] - bgchannels[3]],
                         color=[colors[bgn % 12][ind] if ind is not 3 else 0.2 for ind in range(len(colors[bgn % 12]))])
             bgn += 1
-        ax.errorbar(channelplotdata[0], channelplotdata[3], marker=markers[n % len(markers)], capsize=3, ms=6, lw=3,
+        ax.errorbar(channelplotdata[0], channelplotdata[3], marker=markers[n % len(markers)], capsize=3, ms=4, lw=3,
                     yerr=[channelplotdata[3] - channelplotdata[2], channelplotdata[4] - channelplotdata[3]],
-                    color=tuple(colors[n % 12]), label="ch#"+str(n % 12))
+                    color=tuple(colors[n % 12]), label="ch#"+str(n % 12), markeredgewidth=3)
         ax.set_xlim(min(kwargs["lowthreshs"]), max(kwargs["lowthreshs"]))
         ax.set_ylim(0, 1)
 
@@ -137,5 +137,4 @@ def showLastFdf(useprint=True, usegraph=True):
 
 
 if __name__ == "__main__":
-    #showLastFdf(useprint=False)
-    graphfdf("dtm1asd1v2.fdf")
+    showLastFdf()
