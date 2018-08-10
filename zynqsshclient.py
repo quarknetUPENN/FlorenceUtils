@@ -42,6 +42,8 @@ class ZynqSshClient(SSHClient):
         if len(list(ssh_stderr)) != 0:
             print("Error running command \"" + cmd + "\"! ", end="")
             print(ssh_stderr.readlines())
+            # okay this is brutal but at current stage, stderr means something Very Bad (TM) happened
+            exit(1)
         return ssh_stdin, ssh_stdout, ssh_stderr
 
     def cccd(self, cmd, rw=None, reg=None, chipid=None, payload=None, printresult=True):

@@ -6,7 +6,7 @@ markers = ["s", "o", "<", "D", "h", "X"]
 colors = [plt.cm.get_cmap("brg")(n/12) for n in range(12)]
 colors = [[color[0], color[1], color[2], 1] for color in colors]
 
-
+# Each red |X| denotes a new threshold.  Each | denotes a new L1a at the same threshold
 def printfdf(fname):
     with open(fname, "r") as fdf:
         kwargs = eval(fdf.readline())
@@ -20,14 +20,18 @@ def printfdf(fname):
         for l1ann in range(l1an, l1an + threshspace):
             for channeln in range(len(channeldata)):
                 channeldata[channeln] += (data[l1an].asdblrs[0] + data[l1an].asdblrs[47])[channeln]
-    print(len(channeldata[0]))
 
-    print("Now printing {}".format(fname), end="")
+    print(fmt.BOLD+"Now printing {}".format(fname), end="")
     if kwargs["notes"] == "":
-        print(":")
+        print(":"+fmt.END)
     else:
-        print(", with note: " + kwargs["notes"])
+        print(fmt.END+", with note: " + kwargs["notes"])
+
+    channeln = 0
     for channel in channeldata:
+        if channeln % 16 == 0:
+            _printLowThreshs(kwargs)
+        print("DTMROC #{:<1},ch{:<2}".format(channeln // 16, channeln % 16), end="")
         bitn = 0
         for char in channel:
             if bitn % (24 * threshspace) == 0:
@@ -41,7 +45,17 @@ def printfdf(fname):
             elif char == "0":
                 print(fmt.BLUE + char + fmt.END, end="")
         print("")
+        channeln += 1
+
     fdf.close()
+
+
+def _printLowThreshs(kwargs):
+    print("{:<14}".format("low thresh val"), end="")
+    for thresh in kwargs["lowthreshs"]:
+        print(str(thresh).rjust(3), end="")
+        print((23 * "-") + "|", end="")
+    print()
 
 
 def graphfdf(fname):
