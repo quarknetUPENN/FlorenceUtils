@@ -29,21 +29,6 @@ class L1a:
                str(self.asdblrs) + ", " + \
                str(self.eventid) + ")"
 
-
-# helps makes printing in the terminal pretty
-class fmt:
-    PURPLE = '\033[95m'
-    CYAN = '\033[96m'
-    DARKCYAN = '\033[36m'
-    BLUE = '\033[94m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-    END = '\033[0m'
-
-
 # this class allows us to receive data from the Zynq using a socket connection over ethernet
 # theoritically this can be two way.  However, we simply listen for data coming for the Zynq
 # and process it into L1a objects, catching any unexpected data that comes in and logging such events
@@ -109,6 +94,16 @@ class ZynqTCPHandler(StreamRequestHandler):
                 logfile.write("received l1a of length {}, removing \n".format(len(rawl1a)))
                 rawdata.remove(rawl1a)
                 continue
+
+            dipserror = False
+            for reg in rawl1a[:-1]:
+                if reg[2] != 0:
+                    dipserror = True
+            if dipserror:
+                logfile.write("received l1a in error while dips was empty, removing \n")
+                rawdata.remove(rawl1a)
+                continue
+
             # a string containing only binary digits, all the data from the FPGA concated together
             # thus, [ROC47bit0 -> ROC0bit0, ROC47bit1 -> ROC0bit1....]
             ds = ''

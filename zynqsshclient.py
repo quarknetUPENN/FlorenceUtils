@@ -1,6 +1,8 @@
 from paramiko import SSHClient, WarningPolicy
 from os import system, remove
+from sys import exit as sysexit
 from queue import Queue
+from format import fmt
 
 # these make typing cccd commands a bit nicer since you don't have to type the quotes explicitly
 Config = "Config"
@@ -43,7 +45,7 @@ class ZynqSshClient(SSHClient):
             print("Error running command \"" + cmd + "\"! ", end="")
             print(ssh_stderr.readlines())
             # okay this is brutal but at current stage, stderr means something Very Bad (TM) happened
-            exit(1)
+            sysexit(1)
         return ssh_stdin, ssh_stdout, ssh_stderr
 
     def cccd(self, cmd, rw=None, reg=None, chipid=None, payload=None, printresult=True):
@@ -101,8 +103,12 @@ class ZynqSshClient(SSHClient):
             for thresh in threshs:
                 threshsfile.write(str(thresh))
                 threshsfile.write("\n")
-        system("sshpass -p \"{}\" scp {} {}@{}:{}".format(self.password, threshfilename, self.username,
-                                                          self.ip, self.persistpath))
+        threshcp = system("sshpass -p \"{}\" scp {} {}@{}:{}".format(self.password, threshfilename, self.username,
+                                                                     self.ip, self.persistpath))
+        if threshcp != 0:
+            print(fmt.RED+fmt.UNDERLINE+"FATAL: Failed to copy threshs file to Zynq.  Can you scp into the Zynq? "
+                  "Is the Zynq in your known_hosts file?"+fmt.END)
+            sysexit(threshcp)
         remove(threshfilename)
 
         # actually run the command and return 0 if it worked

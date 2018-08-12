@@ -1,6 +1,7 @@
 from datareception import *
 import matplotlib.pyplot as plt
 import numpy as np
+from format import fmt
 
 markers = ["s", "o", "<", "D", "h", "X"]
 colors = [plt.cm.get_cmap("brg")(n/12) for n in range(12)]
