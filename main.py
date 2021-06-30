@@ -6,7 +6,8 @@ from readfdf import showLastFdf
 from os import popen
 
 # Check to make sure that Ubuntu's IP address is configured correctly
-with popen('ifconfig eth0 | grep "inet\ addr" | cut -d: -f2 | cut -d" " -f1') as f:
+# with popen('ifconfig eth0 | grep "inet\ addr" | cut -d: -f2 | cut -d" " -f1') as f:
+with popen('ifconfig eno1 | grep "inet " | cut -d " " -f 10') as f:
     if f.readline().strip() != "169.254.27.143":
         print(fmt.RED+fmt.UNDERLINE+"FATAL: IP address on Ubuntu configured incorrectly"+fmt.END)
         print("Try running configip.sh")

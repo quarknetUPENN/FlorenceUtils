@@ -40,7 +40,13 @@ class ZynqSshClient(SSHClient):
 
     # A wrapper over paramiko's function that also detects errors and prints them out
     def runcmd(self, cmd):
+        print("running command : " + cmd + "\n")
         ssh_stdin, ssh_stdout, ssh_stderr = self.exec_command(cmd)
+        
+        #print(" stdin   : " + ssh_stdin.readlines() + "\n")
+        #print(" stdout  : " + ssh_stdout + "\n")
+        #print(" stderr  : " + ssh_stderr + "\n")
+        
         if len(list(ssh_stderr)) != 0:
             print("Error running command \"" + cmd + "\"! ", end="")
             print(ssh_stderr.readlines())

@@ -44,7 +44,7 @@ class ZynqTCPHandler(StreamRequestHandler):
         log = open(self.LogFileName, "a")
 
         log.write("\nstarting run...")
-        print("Run started, receiving data...", end="")
+        print("Run started, receiving data... \n", end="")
 
         rawdata = []
         while 1:
@@ -146,6 +146,7 @@ class ZynqTCPHandler(StreamRequestHandler):
     # saves fmtdata by asking user for a valid filename recursively
     def _savefile(self, fmtdata, log):
         filename = input("Input filename to save data as. Leave blank to not save\t\t")
+        #filename = "FDFfiles/" + input("Input filename to save data as. Leave blank to not save\t\t")
         if filename == "":
             log.write("user chose not to save data \n")
             print("Data not saved")
